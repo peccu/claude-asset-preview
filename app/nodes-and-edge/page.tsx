@@ -377,7 +377,7 @@ export default function NodeEdgeRelationUI() {
   }, []);
 
 
-  const handleSubmit2 = async (e: React.FormEvent) => {
+  const handleSubmit3 = async (e: React.FormEvent) => {
     e.preventDefault();
     const session = driver.session();
     try {
