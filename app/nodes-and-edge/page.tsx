@@ -376,40 +376,6 @@ export default function NodeEdgeRelationUI() {
     };
   }, []);
 
-  const fetchDataFromNeo4j = async () => {
-    const session = driver.session();
-    try {
-      // Fetch node types
-      const nodeTypesResult = await session.run('CALL db.labels()');
-      const fetchedNodeTypes = nodeTypesResult.records.map(record => record.get(0));
-      setNodeTypes(fetchedNodeTypes);
-
-      // Fetch edge types
-      const edgeTypesResult = await session.run('CALL db.relationshipTypes()');
-      const fetchedEdgeTypes = edgeTypesResult.records.map(record => record.get(0));
-      setEdgeTypes(fetchedEdgeTypes);
-
-      // Fetch nodes for each type
-      const fetchedMockNodes: MockNodes = {};
-      for (const nodeType of fetchedNodeTypes) {
-        const nodesResult = await session.run(`MATCH (n:${nodeType}) RETURN n.name AS name`);
-        fetchedMockNodes[nodeType] = nodesResult.records.map(record => record.get('name'));
-      }
-      setMockNodes(fetchedMockNodes);
-
-      // Fetch edges for each type
-      const fetchedMockEdges: MockEdges = {};
-      for (const edgeType of fetchedEdgeTypes) {
-        const edgesResult = await session.run(`MATCH ()-[r:${edgeType}]->() RETURN DISTINCT type(r) AS type`);
-        fetchedMockEdges[edgeType] = edgesResult.records.map(record => record.get('type'));
-      }
-      setMockEdges(fetchedMockEdges);
-    } catch (error) {
-      console.error('Error fetching data from Neo4j:', error);
-    } finally {
-      await session.close();
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
