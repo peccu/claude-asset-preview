@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import neo4j from 'neo4j-driver';
+import neo4j, { Driver } from 'neo4j-driver';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -177,7 +177,7 @@ export default function NodeEdgeRelationUI() {
   const [neo4jUser, setNeo4jUser] = useState('');
   const [neo4jPassword, setNeo4jPassword] = useState('');
   const [isConnected, setIsConnected] = useState(false);
-  const [driver, setDriver] = useState<neo4j.Driver | null>(null);
+  const [driver, setDriver] = useState<Driver | null>(null);
 
   useEffect(() => {
     // ローカルストレージから接続情報を読み込む
@@ -233,7 +233,7 @@ export default function NodeEdgeRelationUI() {
     localStorage.removeItem('neo4jPassword');
   };
 
-  const fetchDataFromNeo4j = async (neo4jDriver: neo4j.Driver) => {
+  const fetchDataFromNeo4j = async (neo4jDriver: Driver) => {
     const session = neo4jDriver.session();
     try {
       // Fetch node types
