@@ -1,10 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import neo4j, { Driver } from 'neo4j-driver';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -13,15 +10,18 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
+import neo4j, { Driver } from "neo4j-driver";
+import React, { useEffect, useState } from "react";
 
 // 型定義
 type NodeType = string;
@@ -172,18 +172,17 @@ function MultiSelectDropdown({
 }
 
 export default function NodeEdgeRelationUI() {
-
-  const [neo4jUri, setNeo4jUri] = useState('');
-  const [neo4jUser, setNeo4jUser] = useState('');
-  const [neo4jPassword, setNeo4jPassword] = useState('');
+  const [neo4jUri, setNeo4jUri] = useState("");
+  const [neo4jUser, setNeo4jUser] = useState("");
+  const [neo4jPassword, setNeo4jPassword] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [driver, setDriver] = useState<Driver | null>(null);
 
   useEffect(() => {
     // ローカルストレージから接続情報を読み込む
-    const savedUri = localStorage.getItem('neo4jUri');
-    const savedUser = localStorage.getItem('neo4jUser');
-    const savedPassword = localStorage.getItem('neo4jPassword');
+    const savedUri = localStorage.getItem("neo4jUri");
+    const savedUser = localStorage.getItem("neo4jUser");
+    const savedPassword = localStorage.getItem("neo4jPassword");
 
     if (savedUri) setNeo4jUri(savedUri);
     if (savedUser) setNeo4jUser(savedUser);
@@ -209,15 +208,17 @@ export default function NodeEdgeRelationUI() {
       setIsConnected(true);
 
       // 接続情報をローカルストレージに保存
-      localStorage.setItem('neo4jUri', uri);
-      localStorage.setItem('neo4jUser', user);
-      localStorage.setItem('neo4jPassword', password);
+      localStorage.setItem("neo4jUri", uri);
+      localStorage.setItem("neo4jUser", user);
+      localStorage.setItem("neo4jPassword", password);
 
       await fetchDataFromNeo4j(newDriver);
     } catch (error) {
-      console.error('Failed to connect to Neo4j:', error);
+      console.error("Failed to connect to Neo4j:", error);
       setIsConnected(false);
-      alert('Failed to connect to Neo4j. Please check your connection details.');
+      alert(
+        "Failed to connect to Neo4j. Please check your connection details.",
+      );
     }
   };
 
@@ -228,41 +229,53 @@ export default function NodeEdgeRelationUI() {
     setDriver(null);
     setIsConnected(false);
     // ローカルストレージから接続情報を削除
-    localStorage.removeItem('neo4jUri');
-    localStorage.removeItem('neo4jUser');
-    localStorage.removeItem('neo4jPassword');
+    localStorage.removeItem("neo4jUri");
+    localStorage.removeItem("neo4jUser");
+    localStorage.removeItem("neo4jPassword");
   };
 
   const fetchDataFromNeo4j = async (neo4jDriver: Driver) => {
     const session = neo4jDriver.session();
     try {
       // Fetch node types
-      const nodeTypesResult = await session.run('CALL db.labels()');
-      const fetchedNodeTypes = nodeTypesResult.records.map(record => record.get(0));
+      const nodeTypesResult = await session.run("CALL db.labels()");
+      const fetchedNodeTypes = nodeTypesResult.records.map((record) =>
+        record.get(0),
+      );
       setNodeTypes(fetchedNodeTypes);
 
       // Fetch edge types
-      const edgeTypesResult = await session.run('CALL db.relationshipTypes()');
-      const fetchedEdgeTypes = edgeTypesResult.records.map(record => record.get(0));
+      const edgeTypesResult = await session.run("CALL db.relationshipTypes()");
+      const fetchedEdgeTypes = edgeTypesResult.records.map((record) =>
+        record.get(0),
+      );
       setEdgeTypes(fetchedEdgeTypes);
 
       // Fetch nodes for each type
       const fetchedMockNodes: MockNodes = {};
       for (const nodeType of fetchedNodeTypes) {
-        const nodesResult = await session.run(`MATCH (n:${nodeType}) RETURN n.name AS name`);
-        fetchedMockNodes[nodeType] = nodesResult.records.map(record => record.get('name'));
+        const nodesResult = await session.run(
+          `MATCH (n:${nodeType}) RETURN n.name AS name`,
+        );
+        fetchedMockNodes[nodeType] = nodesResult.records.map((record) =>
+          record.get("name"),
+        );
       }
       setMockNodes(fetchedMockNodes);
 
       // Fetch edges for each type
       const fetchedMockEdges: MockEdges = {};
       for (const edgeType of fetchedEdgeTypes) {
-        const edgesResult = await session.run(`MATCH ()-[r:${edgeType}]->() RETURN DISTINCT type(r) AS type`);
-        fetchedMockEdges[edgeType] = edgesResult.records.map(record => record.get('type'));
+        const edgesResult = await session.run(
+          `MATCH ()-[r:${edgeType}]->() RETURN DISTINCT type(r) AS type`,
+        );
+        fetchedMockEdges[edgeType] = edgesResult.records.map((record) =>
+          record.get("type"),
+        );
       }
       setMockEdges(fetchedMockEdges);
     } catch (error) {
-      console.error('Error fetching data from Neo4j:', error);
+      console.error("Error fetching data from Neo4j:", error);
     } finally {
       await session.close();
     }
@@ -271,7 +284,7 @@ export default function NodeEdgeRelationUI() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!driver) {
-      alert('Please connect to Neo4j first.');
+      alert("Please connect to Neo4j first.");
       return;
     }
     const session = driver.session();
@@ -286,16 +299,18 @@ export default function NodeEdgeRelationUI() {
               MERGE (a)-[r:${edgeType[0]} {type: $edgeValue}]->(b)
               RETURN a, r, b
               `,
-              { nodeAValue, nodeBValue, edgeValue }
+              { nodeAValue, nodeBValue, edgeValue },
             );
           }
         }
       }
-      console.log('Relation(s) created successfully');
+      console.log("Relation(s) created successfully");
       await fetchDataFromNeo4j(driver);
     } catch (error) {
-      console.error('Error creating relation in Neo4j:', error);
-      alert('Failed to create relation. Please check your input and try again.');
+      console.error("Error creating relation in Neo4j:", error);
+      alert(
+        "Failed to create relation. Please check your input and try again.",
+      );
     } finally {
       await session.close();
     }
@@ -366,10 +381,13 @@ export default function NodeEdgeRelationUI() {
           <CardTitle>Neo4j Connection</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleConnect(neo4jUri, neo4jUser, neo4jPassword);
-          }} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleConnect(neo4jUri, neo4jUser, neo4jPassword);
+            }}
+            className="space-y-4"
+          >
             <div>
               <Label htmlFor="neo4jUri">Neo4j URI</Label>
               <Input
@@ -402,7 +420,9 @@ export default function NodeEdgeRelationUI() {
               />
             </div>
             {isConnected ? (
-              <Button onClick={handleDisconnect} variant="destructive">Disconnect</Button>
+              <Button onClick={handleDisconnect} variant="destructive">
+                Disconnect
+              </Button>
             ) : (
               <Button type="submit">Connect</Button>
             )}
@@ -452,7 +472,9 @@ export default function NodeEdgeRelationUI() {
                     </label>
                     <MultiSelectDropdown
                       options={
-                        nodeTypeA.length > 0 ? mockNodes[nodeTypeA[0]] || [] : []
+                        nodeTypeA.length > 0
+                          ? mockNodes[nodeTypeA[0]] || []
+                          : []
                       }
                       value={nodeA}
                       onChange={setNodeA}
@@ -522,7 +544,9 @@ export default function NodeEdgeRelationUI() {
                     </label>
                     <MultiSelectDropdown
                       options={
-                        nodeTypeB.length > 0 ? mockNodes[nodeTypeB[0]] || [] : []
+                        nodeTypeB.length > 0
+                          ? mockNodes[nodeTypeB[0]] || []
+                          : []
                       }
                       value={nodeB}
                       onChange={setNodeB}
