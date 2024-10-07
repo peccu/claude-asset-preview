@@ -10,8 +10,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -20,8 +18,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle } from "lucide-react";
-import neo4j, { Driver } from "neo4j-driver";
-import React, { useEffect, useState } from "react";
+import { Driver } from "neo4j-driver";
+import React, { useState } from "react";
+import Neo4jConnectionForm from "./Neo4jConnectionForm";
 
 // 型定義
 type NodeType = string;
@@ -172,54 +171,12 @@ function MultiSelectDropdown({
 }
 
 export default function NodeEdgeRelationUI() {
-  const [neo4jUri, setNeo4jUri] = useState("");
-  const [neo4jUser, setNeo4jUser] = useState("");
-  const [neo4jPassword, setNeo4jPassword] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [driver, setDriver] = useState<Driver | null>(null);
 
-  useEffect(() => {
-    // ローカルストレージから接続情報を読み込む
-    const savedUri = localStorage.getItem("neo4jUri");
-    const savedUser = localStorage.getItem("neo4jUser");
-    const savedPassword = localStorage.getItem("neo4jPassword");
-
-    if (savedUri) setNeo4jUri(savedUri);
-    if (savedUser) setNeo4jUser(savedUser);
-    if (savedPassword) setNeo4jPassword(savedPassword);
-
-    // 保存された接続情報がある場合、自動的に接続を試みる
-    if (savedUri && savedUser && savedPassword) {
-      handleConnect(savedUri, savedUser, savedPassword);
-    }
-
-    return () => {
-      if (driver) {
-        driver.close();
-      }
-    };
-  }, []);
-
-  const handleConnect = async (uri: string, user: string, password: string) => {
-    try {
-      const newDriver = neo4j.driver(uri, neo4j.auth.basic(user, password));
-      await newDriver.verifyConnectivity();
-      setDriver(newDriver);
-      setIsConnected(true);
-
-      // 接続情報をローカルストレージに保存
-      localStorage.setItem("neo4jUri", uri);
-      localStorage.setItem("neo4jUser", user);
-      localStorage.setItem("neo4jPassword", password);
-
-      await fetchDataFromNeo4j(newDriver);
-    } catch (error) {
-      console.error("Failed to connect to Neo4j:", error);
-      setIsConnected(false);
-      alert(
-        "Failed to connect to Neo4j. Please check your connection details.",
-      );
-    }
+  const handleConnect = (newDriver: Driver) => {
+    setDriver(newDriver);
+    setIsConnected(true);
   };
 
   const handleDisconnect = () => {
@@ -228,10 +185,6 @@ export default function NodeEdgeRelationUI() {
     }
     setDriver(null);
     setIsConnected(false);
-    // ローカルストレージから接続情報を削除
-    localStorage.removeItem("neo4jUri");
-    localStorage.removeItem("neo4jUser");
-    localStorage.removeItem("neo4jPassword");
   };
 
   const fetchDataFromNeo4j = async (neo4jDriver: Driver) => {
@@ -376,59 +329,11 @@ export default function NodeEdgeRelationUI() {
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Neo4j Connection</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleConnect(neo4jUri, neo4jUser, neo4jPassword);
-            }}
-            className="space-y-4"
-          >
-            <div>
-              <Label htmlFor="neo4jUri">Neo4j URI</Label>
-              <Input
-                id="neo4jUri"
-                value={neo4jUri}
-                onChange={(e) => setNeo4jUri(e.target.value)}
-                placeholder="bolt://localhost:7687"
-                disabled={isConnected}
-              />
-            </div>
-            <div>
-              <Label htmlFor="neo4jUser">Username</Label>
-              <Input
-                id="neo4jUser"
-                value={neo4jUser}
-                onChange={(e) => setNeo4jUser(e.target.value)}
-                placeholder="neo4j"
-                disabled={isConnected}
-              />
-            </div>
-            <div>
-              <Label htmlFor="neo4jPassword">Password</Label>
-              <Input
-                id="neo4jPassword"
-                type="password"
-                value={neo4jPassword}
-                onChange={(e) => setNeo4jPassword(e.target.value)}
-                placeholder="password"
-                disabled={isConnected}
-              />
-            </div>
-            {isConnected ? (
-              <Button onClick={handleDisconnect} variant="destructive">
-                Disconnect
-              </Button>
-            ) : (
-              <Button type="submit">Connect</Button>
-            )}
-          </form>
-        </CardContent>
-      </Card>
+      <Neo4jConnectionForm
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+        isConnected={isConnected}
+      />
 
       {isConnected && (
         <form onSubmit={handleSubmit} className="space-y-4">
