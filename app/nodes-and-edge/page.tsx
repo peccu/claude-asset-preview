@@ -359,52 +359,6 @@ export default function NodeEdgeRelationUI() {
     }
   };
 
-  const handleSubmit2 = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(`Relation created:`, {
-      nodeA: { type: nodeTypeA, values: nodeA },
-      edge: { type: edgeType, values: edge },
-      nodeB: { type: nodeTypeB, values: nodeB },
-    });
-    // Here you would typically send this data to your backend or graph database
-  };
-
-  useEffect(() => {
-    fetchDataFromNeo4j();
-    return () => {
-      driver.close();
-    };
-  }, []);
-
-
-  const handleSubmit3 = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const session = driver.session();
-    try {
-      for (const nodeAValue of nodeA) {
-        for (const nodeBValue of nodeB) {
-          for (const edgeValue of edge) {
-            await session.run(
-              `
-              MERGE (a:${nodeTypeA[0]} {name: $nodeAValue})
-              MERGE (b:${nodeTypeB[0]} {name: $nodeBValue})
-              MERGE (a)-[r:${edgeType[0]} {type: $edgeValue}]->(b)
-              RETURN a, r, b
-              `,
-              { nodeAValue, nodeBValue, edgeValue }
-            );
-          }
-        }
-      }
-      console.log('Relation(s) created successfully');
-      await fetchDataFromNeo4j(); // Refresh data after creation
-    } catch (error) {
-      console.error('Error creating relation in Neo4j:', error);
-    } finally {
-      await session.close();
-    }
-  };
-
   return (
     <div className="space-y-4 max-w-2xl mx-auto p-4">
       <Card>
